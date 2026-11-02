@@ -849,3 +849,43 @@ button[hidden],[hidden] {
     transition:none!important
   }
 }
+
+/* Workblocks v0.2: unobtrusive recovery, history and expanded reporting. */
+.recovery-links{display:flex;justify-content:center;margin-top:12px}
+.recovery-links button{border:0;background:transparent;color:#d5e7da;font-size:12px;font-weight:650;padding:7px 10px;text-decoration:underline;text-decoration-color:#769f88;text-underline-offset:4px}
+.quiet-notice{background:#f1f6ef;border:1px solid #dbe7dc;border-radius:16px;padding:16px 17px;margin:14px 0 19px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.quiet-notice strong{font-size:13px;color:#30543c}
+.quiet-notice p{font-size:12px;color:#657e6b;line-height:1.55;margin:5px 0 0}
+.notice-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.notice-actions .secondary-button{padding:9px 12px}
+.quiet-link{border:0;background:transparent;color:#668071;font-size:12px;font-weight:650;padding:9px 6px}
+.preset-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.preset-row button{background:#edf5ee;border:1px solid #d9e8dc;border-radius:9px;color:#2a5a43;min-height:42px;padding:5px 2px;font-size:11px;font-weight:700}
+.period-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 8px}
+.period-controls label{color:#69796e;font-size:12px;font-weight:700}
+.period-controls select{max-width:66%;color:#315a44;border:1px solid #dfe7de;border-radius:11px;background:#fff;font-size:13px;font-weight:650;padding:12px 10px}
+.period-description{font-size:11px;color:#8c9a90;margin:0 0 17px;line-height:1.5}
+.stats-top{margin-bottom:7px}
+.weekly-bars{overflow-x:auto;gap:5px;grid-auto-flow:column}
+.weekly-day{min-width:0}
+.weekly-day .bar-label{font-size:10px;white-space:nowrap}
+.weekly-day .bar-hours{font-size:9px;white-space:nowrap;letter-spacing:-.3px}
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:23px}
+.month-nav h2{font-size:18px;font-weight:750;letter-spacing:-.5px;margin:0}
+.month-nav .icon-button{font-size:27px;line-height:1}
+.calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.calendar-weekdays{margin-bottom:7px}
+.calendar-weekdays span{text-align:center;font-size:11px;color:#8c9a90;font-weight:700}
+.calendar-day{border:1px solid #e8ece7;background:#fbfcfa;color:#334639;border-radius:10px;min-height:57px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 1px}
+.calendar-day span{font-size:13px;font-weight:750}
+.calendar-day small{font-size:9px;color:#728977;font-weight:650;white-space:nowrap}
+.calendar-day.selected{background:#315d47;color:#fff;border-color:#315d47}
+.calendar-day.selected small{color:#d6e9d9}
+.calendar-day.is-today:not(.selected){border-color:#6aa37b}
+.calendar-tip{font-size:11px;color:#84948a;margin:15px 0 0;text-align:center}
+.preference-row{display:flex;gap:11px;align-items:flex-start;background:#f7faf6;padding:15px;border-radius:13px;margin-top:18px}
+.preference-row input{accent-color:#2d644f;min-width:18px;min-height:18px;margin-top:1px}
+.preference-row strong,.preference-row small{display:block}
+.preference-row strong{font-size:13px}
+.preference-row small{font-size:11px;color:#87958a;margin-top:4px;line-height:1.4}
+@media(max-width:420px){.app-shell{padding:18px 17px 24px}.tabs{gap:22px}.stats-top{padding:16px}.stats-total{font-size:29px}.stats-small{font-size:20px}.calendar-day{min-height:51px}.calendar-day small{font-size:8px}.insights-card{padding:17px 12px}}
