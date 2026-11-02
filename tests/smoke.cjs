@@ -92,3 +92,73 @@ assert(app.node('todayBlocks').innerHTML.includes('1h 00m'));
 app.node('insightsTab').click();
 assert.equal(app.node('insightsTotal').textContent, '2h 00m');
 console.log('PASS: start/stop, reload persistence, categories, multiple blocks, editing, deletion, midnight stats, insights');
+
+// New version: last category is suggested, and can be disabled.
+storage.clear();
+app = createApp();
+app.node('activeCategory').value = 'Research';
+app.node('activeCategory').dispatch('change');
+app.node('timerButton').click();
+app.node('timerButton').click();
+assert.equal(app.node('activeCategory').value, 'Research', 'remember category across blocks');
+app = createApp();
+assert.equal(app.node('activeCategory').value, 'Research', 'remember category across reloads');
+app.node('rememberCategoryToggle').checked = false;
+app.node('rememberCategoryToggle').dispatch('change');
+assert.equal(app.node('activeCategory').value, '', 'disabling category memory clears suggestion');
+
+// Forgot to start: predate an active timer and check durable persistence.
+storage.clear();
+app = createApp();
+app.node('forgotStartBtn').click();
+assert(app.node('startDialog').open);
+const pastStart = new Date(Date.now() - 45 * 60000);
+const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+app.node('forgotStartInput').value = fmt(pastStart);
+app.node('startForm').dispatch('submit');
+assert(read().active, 'earlier start creates running session');
+assert(Math.abs(Date.parse(read().active.startedAt) - pastStart.getTime())<1000);
+app = createApp();
+assert.equal(app.node('fixStartBtn').hidden, false);
+app.node('fixStartBtn').click();
+const earlierStart = new Date(Date.now()-90*60000);
+app.node('forgotStartInput').value=fmt(earlierStart);
+app.node('startForm').dispatch('submit');
+assert(Math.abs(Date.parse(read().active.startedAt)-earlierStart.getTime())<1000);
+
+// Long timer: do not auto-stop; permit correcting the end time.
+const tenHoursAgo = new Date(Date.now()-11*3600000).toISOString();
+const existing = read();
+existing.active.startedAt = tenHoursAgo;
+storage.set('workblocks.state.v1',JSON.stringify(existing));
+app = createApp();
+assert.equal(app.node('longTimerNotice').hidden,false,'long timer recovery notice');
+app.node('fixEndBtn').click();
+const actualEnd = new Date(Date.now()-3600000);
+app.node('forgotEndInput').value=fmt(actualEnd);
+app.node('endForm').dispatch('submit');
+assert.equal(read().active,null);
+assert.equal(read().blocks.length,1);
+assert(Math.abs(Date.parse(read().blocks[0].endedAt) - actualEnd.getTime())<1000);
+
+// Reject overlapping forgotten starts without overwriting existing data.
+app.node('forgotStartBtn').click();
+app.node('forgotStartInput').value=fmt(new Date(Date.now()-12*3600000));
+app.node('startForm').dispatch('submit');
+assert.equal(read().active,null,'overlapping new start is rejected');
+assert.equal(app.node('startError').hidden,false);
+app.node('startDialog').close();
+
+// Calendar navigation and history details for previously saved blocks.
+app.node('historyTab').click();
+assert(app.node('historyMonthTitle').textContent);
+assert(app.node('calendarGrid').innerHTML.includes('calendar-day'));
+assert(app.node('historyBlocks').innerHTML.includes('block-item'));
+app.node('periodSelect').value = 'month';
+app.node('periodSelect').dispatch('change');
+app.node('insightsTab').click();
+assert(app.node('periodDescription').textContent);
+app.node('periodSelect').value = 'year';
+app.node('periodSelect').dispatch('change');
+assert(app.node('weeklyBars').innerHTML.includes('bar-track'));
+console.log('PASS v0.2: category preference, forgotten starts, start correction, long timer recovery, overlap prevention, history, period summaries');
