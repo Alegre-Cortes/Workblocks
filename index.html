@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f4">
+  <meta name="description" content="A quiet, offline-first work-hours tracker. One tap to start, one tap to stop.">
+  <meta name="color-scheme" content="light">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Workblocks — time, simply</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true"><span></span></span>
+        <span>workblocks<span class="brand-period">.</span></span>
+      </div>
+      <div class="header-actions">
+        <button id="installBtn" class="text-action" hidden type="button">Install</button>
+        <button id="dataBtn" class="icon-button" type="button" aria-label="Data and backups" title="Data and backups">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 7h15M4.5 12h15M4.5 17h15"/><circle cx="9" cy="7" r="2" fill="#f6f7f4"/><circle cx="15" cy="12" r="2" fill="#f6f7f4"/><circle cx="10" cy="17" r="2" fill="#f6f7f4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <nav class="tabs" aria-label="App sections">
+        <button id="todayTab" class="tab active" type="button" aria-current="page">Today</button>
+        <button id="insightsTab" class="tab" type="button">Insights</button>
+      </nav>
+
+      <section id="todayView" aria-label="Today's work">
+        <div class="page-heading">
+          <div>
+            <div id="todayDate" class="eyebrow">MONDAY, 2 NOVEMBER</div>
+            <h1>Make time count<span class="heading-period">.</span></h1>
+          </div>
+        </div>
+
+        <section class="timer-card" id="timerCard" aria-label="Work timer">
+          <div class="timer-topline"><span class="status-dot" id="statusDot"></span><span id="statusText">Ready when you are</span></div>
+          <div class="timer-number" id="timerDisplay" role="timer" aria-live="off">00:00:00</div>
+          <div class="timer-description" id="timerDescription">Start a block whenever you begin working</div>
+          <button id="timerButton" class="timer-button" type="button"><span id="timerButtonIcon">▶</span><span id="timerButtonLabel">Start working</span></button>
+          <div class="category-row">
+            <span class="subtle-label">THIS BLOCK</span>
+            <label class="select-wrap"><span class="sr-only">Work category (optional)</span><select id="activeCategory" aria-label="Current block category"><option value="">Uncategorized</option><option value="Research">Research</option><option value="Mentoring">Mentoring</option><option value="Bureaucracy">Bureaucracy</option><option value="Outreach">Outreach</option><option value="Other">Other</option></select><span class="chevron">⌄</span></label>
+          </div>
+        </section>
+
+        <section class="totals-grid" aria-label="Time totals">
+          <div class="metric-card"><span class="metric-label">Today</span><strong id="todayTotal">0h 00m</strong><span class="metric-foot">Tracked work</span></div>
+          <div class="metric-card"><span class="metric-label">Last 7 days</span><strong id="weekTotal">0h 00m</strong><span class="metric-foot">Including today</span></div>
+        </section>
+
+        <section class="section-block" aria-label="Today's work blocks">
+          <div class="section-heading"><div><h2>Today's blocks</h2><p id="blocksCount">No blocks yet</p></div><button id="addBlockBtn" class="secondary-button" type="button"><span aria-hidden="true">＋</span> Add</button></div>
+          <div id="todayBlocks" class="block-list"></div>
+        </section>
+      </section>
+
+      <section id="insightsView" hidden aria-label="Work insights">
+        <div class="page-heading insights-title"><div><div class="eyebrow">A LITTLE PERSPECTIVE</div><h1>Your time, at a glance<span class="heading-period">.</span></h1></div></div>
+        <div class="stats-top"><div><span class="metric-label">LAST 7 DAYS</span><div id="insightsTotal" class="stats-total">0h 00m</div></div><div><span class="metric-label">DAILY AVERAGE</span><div id="insightsAverage" class="stats-small">0h 00m</div></div></div>
+        <section class="insights-card"><div class="section-heading"><h2>Daily work</h2></div><div id="weeklyBars" class="weekly-bars" role="img" aria-label="Last seven days of tracked time"></div></section>
+        <section class="insights-card"><div class="section-heading"><h2>Where your time goes</h2></div><div id="categoryBreakdown" class="category-breakdown"></div></section>
+        <section class="insights-card"><div class="section-heading"><div><h2>Recent blocks</h2><p>Most recent 30 completed sessions</p></div></div><div id="recentBlocks" class="block-list compact-list"></div></section>
+      </section>
+    </main>
+    <footer class="footer"><span>Made for focusing, not fiddling.</span><span id="storageState">● Saved on this device</span></footer>
+  </div>
+
+  <dialog id="blockDialog" class="modal">
+    <form id="blockForm" novalidate>
+      <div class="modal-heading"><div><div class="eyebrow">WORK SESSION</div><h2 id="blockDialogTitle">Edit block</h2></div><button type="button" id="closeDialogBtn" class="icon-button" aria-label="Close">✕</button></div>
+      <label class="field">Start <input id="startInput" type="datetime-local" step="1" required></label>
+      <label class="field">End <input id="endInput" type="datetime-local" step="1" required></label>
+      <label class="field">Category <select id="editCategory"><option value="">Uncategorized</option><option value="Research">Research</option><option value="Mentoring">Mentoring</option><option value="Bureaucracy">Bureaucracy</option><option value="Outreach">Outreach</option><option value="Other">Other</option></select></label>
+      <label class="field">Note <span class="optional">(optional)</span><input id="noteInput" type="text" maxlength="140" placeholder="Anything useful to remember"></label>
+      <p class="form-error" id="formError" role="alert" hidden></p>
+      <div class="modal-actions"><button id="cancelBlockBtn" class="secondary-button" type="button">Cancel</button><button class="solid-button" type="submit">Save block</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="dataDialog" class="modal">
+    <div class="modal-heading"><div><div class="eyebrow">YOUR DATA</div><h2>Backups & exports</h2></div><button type="button" id="closeDataBtn" class="icon-button" aria-label="Close">✕</button></div>
+    <p class="dialog-copy">Everything is stored on this device, in this browser. Export a backup regularly: clearing browser data can erase your sessions.</p>
+    <div class="data-actions"><button id="exportCsvBtn" class="data-button" type="button"><span><strong>Export CSV</strong><small>Open in Google Sheets</small></span><span aria-hidden="true">↗</span></button><button id="exportJsonBtn" class="data-button" type="button"><span><strong>Backup JSON</strong><small>Save your sessions and deletion history</small></span><span aria-hidden="true">↗</span></button><label class="data-button import-button"><span><strong>Import backup</strong><small>Merge a Workblocks JSON backup</small></span><span aria-hidden="true">＋</span><input id="importJsonInput" type="file" accept=".json,application/json" hidden></label></div>
+    <div class="sync-note"><strong>Google Sheets sync</strong><p>Planned for a subsequent version. The export already uses the same block IDs and timestamps we'll need for reliable synchronization.</p></div>
+    <button class="secondary-button full-width" id="dismissDataBtn" type="button">Done</button>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
