@@ -31,6 +31,7 @@
       <nav class="tabs" aria-label="App sections">
         <button id="todayTab" class="tab active" type="button" aria-current="page">Today</button>
         <button id="insightsTab" class="tab" type="button">Insights</button>
+        <button id="historyTab" class="tab" type="button">History</button>
       </nav>
 
       <section id="todayView" aria-label="Today's work">
@@ -46,15 +47,24 @@
           <div class="timer-number" id="timerDisplay" role="timer" aria-live="off">00:00:00</div>
           <div class="timer-description" id="timerDescription">Start a block whenever you begin working</div>
           <button id="timerButton" class="timer-button" type="button"><span id="timerButtonIcon">▶</span><span id="timerButtonLabel">Start working</span></button>
+          <div class="recovery-links"><button id="forgotStartBtn" type="button">Forgot to start? Set an earlier time</button><button id="fixStartBtn" type="button" hidden>Adjust start time</button></div>
           <div class="category-row">
             <span class="subtle-label">THIS BLOCK</span>
             <label class="select-wrap"><span class="sr-only">Work category (optional)</span><select id="activeCategory" aria-label="Current block category"><option value="">Uncategorized</option><option value="Research">Research</option><option value="Mentoring">Mentoring</option><option value="Bureaucracy">Bureaucracy</option><option value="Outreach">Outreach</option><option value="Other">Other</option></select><span class="chevron">⌄</span></label>
           </div>
         </section>
+        <section id="longTimerNotice" class="quiet-notice" hidden aria-label="Long running timer">
+          <div><strong>Still tracking?</strong><p>This block has been running for over 10 hours. If you forgot to stop, set its actual end time.</p></div>
+          <div class="notice-actions"><button id="fixEndBtn" type="button" class="secondary-button">Fix end time</button><button id="dismissLongBtn" type="button" class="quiet-link">Not now</button></div>
+        </section>
 
         <section class="totals-grid" aria-label="Time totals">
           <div class="metric-card"><span class="metric-label">Today</span><strong id="todayTotal">0h 00m</strong><span class="metric-foot">Tracked work</span></div>
           <div class="metric-card"><span class="metric-label">Last 7 days</span><strong id="weekTotal">0h 00m</strong><span class="metric-foot">Including today</span></div>
+        </section>
+        <section id="backupNotice" class="quiet-notice" hidden aria-label="Backup reminder">
+          <div><strong>Time for a backup</strong><p>Your records are only on this device. Save a JSON copy to protect them.</p></div>
+          <div class="notice-actions"><button id="backupNowBtn" type="button" class="secondary-button">Backup JSON</button><button id="backupLaterBtn" type="button" class="quiet-link">Remind me later</button></div>
         </section>
 
         <section class="section-block" aria-label="Today's work blocks">
@@ -65,14 +75,49 @@
 
       <section id="insightsView" hidden aria-label="Work insights">
         <div class="page-heading insights-title"><div><div class="eyebrow">A LITTLE PERSPECTIVE</div><h1>Your time, at a glance<span class="heading-period">.</span></h1></div></div>
-        <div class="stats-top"><div><span class="metric-label">LAST 7 DAYS</span><div id="insightsTotal" class="stats-total">0h 00m</div></div><div><span class="metric-label">DAILY AVERAGE</span><div id="insightsAverage" class="stats-small">0h 00m</div></div></div>
-        <section class="insights-card"><div class="section-heading"><h2>Daily work</h2></div><div id="weeklyBars" class="weekly-bars" role="img" aria-label="Last seven days of tracked time"></div></section>
+        <div class="period-controls"><label for="periodSelect">Time range</label><select id="periodSelect"><option value="seven">Last 7 days</option><option value="week">This week · Mon–Sun</option><option value="month">This month</option><option value="previousMonth">Last month</option><option value="year">This year</option></select></div>
+        <p id="periodDescription" class="period-description"></p>
+        <div class="stats-top"><div><span class="metric-label">TOTAL TRACKED</span><div id="insightsTotal" class="stats-total">0h 00m</div></div><div><span class="metric-label">PER ACTIVE DAY</span><div id="insightsAverage" class="stats-small">0h 00m</div></div></div>
+        <p id="activeDaysDescription" class="period-description"></p>
+        <section class="insights-card"><div class="section-heading"><h2 id="workChartTitle">Daily work</h2></div><div id="weeklyBars" class="weekly-bars" role="img" aria-label="Last seven days of tracked time"></div></section>
         <section class="insights-card"><div class="section-heading"><h2>Where your time goes</h2></div><div id="categoryBreakdown" class="category-breakdown"></div></section>
         <section class="insights-card"><div class="section-heading"><div><h2>Recent blocks</h2><p>Most recent 30 completed sessions</p></div></div><div id="recentBlocks" class="block-list compact-list"></div></section>
+      </section>
+
+      <section id="historyView" hidden aria-label="History and calendar">
+        <div class="page-heading"><div><div class="eyebrow">LOOK BACK</div><h1>Your work history<span class="heading-period">.</span></h1></div></div>
+        <section class="insights-card">
+          <div class="month-nav"><button id="previousMonthBtn" class="icon-button" type="button" aria-label="Previous month">‹</button><h2 id="historyMonthTitle"></h2><button id="nextMonthBtn" class="icon-button" type="button" aria-label="Next month">›</button></div>
+          <div class="calendar-weekdays" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+          <div id="calendarGrid" class="calendar-grid" aria-label="Select a day to view work blocks"></div>
+          <p class="calendar-tip">Select a date to see or correct its sessions.</p>
+        </section>
+        <section class="section-block"><div class="section-heading"><div><h2 id="historySelectedTitle"></h2><p id="historyDayTotal"></p></div><button id="addHistoryBlockBtn" class="secondary-button" type="button">＋ Add</button></div><div id="historyBlocks" class="block-list"></div></section>
       </section>
     </main>
     <footer class="footer"><span>Made for focusing, not fiddling.</span><span id="storageState">● Saved on this device</span></footer>
   </div>
+
+  <dialog id="startDialog" class="modal">
+    <form id="startForm" novalidate>
+      <div class="modal-heading"><div><div class="eyebrow">MISSED THE START?</div><h2 id="startDialogTitle">Start earlier</h2></div><button id="closeStartBtn" class="icon-button" type="button" aria-label="Close">✕</button></div>
+      <p class="dialog-copy">Choose when you actually started. The timer will count from that time.</p>
+      <div id="startPresets" class="preset-row"><button type="button" data-minutes="15">15 min ago</button><button type="button" data-minutes="30">30 min</button><button type="button" data-minutes="60">1 hour</button><button type="button" data-minutes="120">2 hours</button></div>
+      <label class="field">Actual start time <input id="forgotStartInput" type="datetime-local" step="1" required></label>
+      <p id="startError" class="form-error" role="alert" hidden></p>
+      <div class="modal-actions"><button id="cancelStartBtn" class="secondary-button" type="button">Cancel</button><button id="saveStartBtn" class="solid-button" type="submit">Start from this time</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="endDialog" class="modal">
+    <form id="endForm" novalidate>
+      <div class="modal-heading"><div><div class="eyebrow">MISSED THE STOP?</div><h2>Correct end time</h2></div><button id="closeEndBtn" class="icon-button" type="button" aria-label="Close">✕</button></div>
+      <p class="dialog-copy">End the running block at the time you actually finished. Nothing is stopped until you save.</p>
+      <label class="field">Actual end time <input id="forgotEndInput" type="datetime-local" step="1" required></label>
+      <p id="endError" class="form-error" role="alert" hidden></p>
+      <div class="modal-actions"><button id="cancelEndBtn" class="secondary-button" type="button">Cancel</button><button class="solid-button" type="submit">Save corrected block</button></div>
+    </form>
+  </dialog>
 
   <dialog id="blockDialog" class="modal">
     <form id="blockForm" novalidate>
@@ -90,6 +135,7 @@
     <div class="modal-heading"><div><div class="eyebrow">YOUR DATA</div><h2>Backups & exports</h2></div><button type="button" id="closeDataBtn" class="icon-button" aria-label="Close">✕</button></div>
     <p class="dialog-copy">Everything is stored on this device, in this browser. Export a backup regularly: clearing browser data can erase your sessions.</p>
     <div class="data-actions"><button id="exportCsvBtn" class="data-button" type="button"><span><strong>Export CSV</strong><small>Open in Google Sheets</small></span><span aria-hidden="true">↗</span></button><button id="exportJsonBtn" class="data-button" type="button"><span><strong>Backup JSON</strong><small>Save your sessions and deletion history</small></span><span aria-hidden="true">↗</span></button><label class="data-button import-button"><span><strong>Import backup</strong><small>Merge a Workblocks JSON backup</small></span><span aria-hidden="true">＋</span><input id="importJsonInput" type="file" accept=".json,application/json" hidden></label></div>
+    <label class="preference-row"><input id="rememberCategoryToggle" type="checkbox" checked><span><strong>Remember last category</strong><small>Suggest it for the next session. You can always choose Uncategorized.</small></span></label>
     <div class="sync-note"><strong>Google Sheets sync</strong><p>Planned for a subsequent version. The export already uses the same block IDs and timestamps we'll need for reliable synchronization.</p></div>
     <button class="secondary-button full-width" id="dismissDataBtn" type="button">Done</button>
   </dialog>
