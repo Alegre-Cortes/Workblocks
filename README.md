@@ -1,82 +1,54 @@
-# Workblocks (v0.1)
+# Workblocks v0.2
 
-**A tiny, offline-first work-hours tracker designed for Android.** No accounts, libraries, subscription, or server database required.
+Offline-first Android-installable PWA for tracking work time. No account or server is required. **Your sessions remain stored in your device's `localStorage`**, under the **unchanged** `workblocks.state.v1` key, so updating from v0.1 retains existing records.
 
-## What works now
+## What's new in v0.2
 
-- **One tap to start, one tap to stop.** A running session continues to be timed correctly if you close/reopen the app or restart the phone, because its start timestamp is saved immediately.
-- **Any number of sessions per day.** Sessions can cross midnight; totals are allocated to the correct local day (including daylight-saving transitions).
-- **Optional categories:** Research, Mentoring, Bureaucracy, Outreach, Other, or Uncategorized. You can set the category before or during a block, or edit it later.
-- **Manual correction**: add, edit, and delete blocks; optional note per block. The editor prevents overlapping work sessions.
-- **Insights**: today, last 7 days, a simple daily chart, a category breakdown, and recent blocks.
-- **Offline after first successful visit:** cached app shell via service worker; records persist locally via `localStorage`.
-- **Export a CSV** for Google Sheets, **export a JSON backup**, and merge a JSON backup into the local database. Deleted blocks are retained as tombstones in the JSON backup for future sync handling.
+- **Forgot to start?** Tap the small link below Start, select 15/30/60/120 minutes ago or an exact start timestamp, then start a backdated **running** session. If a session is already running, use **Adjust start time**. A past start cannot overlap an existing completed block.
+- **Forgot to stop?** After an active session exceeds **10 hours**, a quiet reminder appears on the Today screen. You can **Fix end time** to finish the active session at its actual end time, or **Not now** to suppress the reminder for 24 hours. The app **never stops or truncates a timer automatically**.
+- **History** calendar: browse months, select any date, inspect, edit, delete, or add sessions for that day. Sessions crossing midnight are correctly attributed per local calendar day.
+- **Remember last category**: enabled by default; after you select a category it is suggested for your next session. You can always select Uncategorized or disable the feature in **Data & backups**.
+- **More insights**: last seven days, current Monday–Sunday week, current month, last month and current year. The graphs show daily totals, week portions within a month, or monthly totals for a year. Per-active-day average excludes days with zero recorded time.
+- **Backup reminders**: if you have saved blocks and haven't requested a JSON backup for at least seven days, a quiet notice prompts you to save one. You can snooze it for three days. The reminder is displayed **only while the app is open**, not as a background notification.
 
-## How to put it on your Android phone (recommended)
+## Installation or upgrade
 
-1. Create a new GitHub repository (e.g. `workblocks`). Extract this ZIP and upload its **contents** to the repository's root so `index.html` is at the top level. You can use GitHub's **Add file → Upload files** feature.
-2. In the repository, open **Settings → Pages**. Choose **Deploy from a branch**, `main`, `/ (root)`, and save.
-3. Open the HTTPS site URL that GitHub Pages gives you, typically `https://YOUR-USERNAME.github.io/workblocks/`, in **Chrome on Android**.
-4. In Chrome's menu choose **Install app** or **Add to Home screen** (the wording depends on Android/Chrome). You will get a Workblocks icon in your launcher.
-5. Open it from the launcher and start tracking. When the app has been visited online once, its shell should work offline.
+1. On GitHub, upload the updated `index.html`, `app.js`, `styles.css`, `sw.js`, `README.md`, and `tests/smoke.cjs` to the **same repository and same paths**. Keep all other files (icons and manifest) unchanged.
+2. Wait until **Actions → pages build and deployment** is successful.
+3. On Android, open your existing Workblocks icon. If you see the old interface, close and reopen the app or refresh its website in Chrome. The offline cache was bumped from v1 to v2; an existing open page may initially display the previous cached version.
+4. Verify that your previous sessions still appear in **History** before adding new ones.
 
-**Important:** The GitHub repository and deployed page contain only app code. Your time logs stay **on the device/browser where you use the app**. They are not automatically uploaded to GitHub, Google, or ChatGPT.
+**Before updating**, choose **Data & backups → Backup JSON** inside your existing app and save the file somewhere safe. Updating code should not remove your records, but a backup is prudent.
 
-A PWA needs HTTPS (or localhost) for installation; opening `index.html` directly is not an installable PWA. You can still inspect the files locally. GitHub Pages is just one possible free static host.
+## Existing functionality
 
-## Test it on a computer before deploying
+- One-tap Start/Stop; multiple blocks/day; optional Research, Mentoring, Bureaucracy, Outreach, Other or Uncategorized; add/edit/delete blocks and notes; offline after first visit; basic statistics.
+- CSV export for Google Sheets and JSON backup/merge import.
+- Stable IDs, timestamps, update timestamps, and deletion records for future synchronization.
+
+## Storage, privacy and limitations
+
+- GitHub Pages hosts the app **code only**. Work logs and preferences remain on the device/browser that created them. There is **no Google Drive synchronization yet**, and no transfer between phones and computers.
+- Clearing site data, switching to a different hostname, or uninstalling an app in a way that removes site data may delete your sessions. **Keep periodic JSON backups.** A download being requested does not guarantee the backup file was safely saved; check your Downloads folder.
+- An offline service worker caches app files, but background timers do not run in an Android service. Time is computed from stored wall-clock timestamps when the app is reopened; correcting your phone's clock while tracking may affect elapsed time.
+- The 10-hour and backup reminders are **in-app** reminders, not system-level alarms. If the PWA is closed, there are no notifications.
+- A remembered category is optional; no category is required for Start/Stop.
+
+## Local tests
+
+From this directory, with Node.js 18+:
 
 ```bash
-cd workblocks-pwa
-python3 -m http.server 8000
+node tests/smoke.cjs
 ```
 
-Open `http://localhost:8000/` in Chrome. Start a block, change its category, reload, stop, then check the Today list and Insights tab.
+To test in a browser, run `python3 -m http.server 8000` and visit `http://localhost:8000` (a service worker can also operate on localhost).
 
-## Google Sheets right now
+## Source files
 
-Choose **Data (top-right settings icon) → Export CSV**, and import that file into a Google Sheet using **File → Import → Upload**. The export includes:
-
-`id, date_local, start_local, end_local, start_iso, end_iso, category, note, duration_minutes, timezone, updated_at`
-
-`start_iso` and `end_iso` are absolute UTC timestamps. Local dates/times are included for convenient analysis. Hours are calculated from timestamps, not from a constantly running background process. If one block crosses midnight, split it by local day when calculating a daily report in Sheets; the in-app report does this automatically.
-
-Export **Backup JSON** periodically. Device/browser storage can be cleared by the browser or operating system, and installing an app from a different URL or using a different browser creates separate storage. Do not uninstall/clear site data without a backup.
-
-## Future Google Sheets automatic sync (v0.2 design)
-
-The groundwork is in place: each block has a stable `id`, `startedAt`, `endedAt`, `category`, `note`, `updatedAt`, and optional `deletedAt`. The next version can add:
-
-1. **Google OAuth login** using Google Identity Services, with your own OAuth application configured on Google Cloud.
-2. Create/select an **app-owned spreadsheet** in your Google Drive, accessed via Google Sheets API. Prefer the `drive.file` scope where supported, rather than blanket Drive access.
-3. **Upsert by block ID** and compare `updatedAt`, so edited blocks replace prior rows, and syncing cannot append duplicates. `deletedAt` would propagate deletions.
-4. **Sync on app open / when back online / on demand**; don't rely on background syncing from a closed PWA. Keep local records canonical until a sync succeeds.
-5. Handle conflicts and allow downloading/merging the original JSON backup.
-
-**Do not put access tokens, API secrets, or a publicly writable Apps Script endpoint in a static GitHub Pages repository.** A private spreadsheet is not a secure server, but OAuth authorizes your app to communicate with it. Authentication/permission setup is intentionally **not** in v0.1.
-
-## Project files
-
-- `index.html` — UI and dialogs
-- `styles.css` — responsive styling
-- `app.js` — timer, local storage, edit, stats and exports
-- `manifest.webmanifest` — Android install metadata
-- `sw.js` — caches the app shell for offline use
-- `icons/` — generated 192px and 512px icons
-
-## Known prototype limitations
-
-- Data lives in each browser/device's local storage; it **does not sync** automatically between phone and desktop yet.
-- There is no background notification or home-screen timer widget in this first PWA; reopening shows the correct elapsed time.
-- If the phone's system clock changes manually while a block is running, time measurement can be inaccurate. The app uses absolute wall-clock timestamps.
-- The last-7-days summary uses seven calendar days, including non-working days; its average is total/7.
-- If a block is longer than one day, Today's list clips its displayed duration to today, but editing opens the **full block**.
-- App-shell updates require changing the cache version in `sw.js` when deploying modified files.
-
-## Privacy
-
-No analytics, trackers, external API calls or third-party dependencies are included. The service worker only caches the static app's own files. Local records remain on your device unless you export them.
-
-## Next useful iteration
-
-After testing a normal workweek, prioritize a **Google Sheets OAuth connection**, then consider a native Android widget or quick-start shortcut only if the web app isn't convenient enough.
+- `index.html` — UI, calendar, recovery and edit dialogs
+- `styles.css` — visual styling
+- `app.js` — timers, local storage, history, summaries, category memory, exports
+- `sw.js` — v2 offline shell cache
+- `manifest.webmanifest` and `icons/` — installation assets (unchanged)
+- `tests/smoke.cjs` — deterministic Node smoke tests
